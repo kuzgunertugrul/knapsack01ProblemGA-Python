@@ -1,41 +1,52 @@
 import random
-from typing import List
 
 parents = []
 parentsAfterSelection = []
 parentsProfit = []
 parentsProfitAfterSelection = []
+crossoveredChilds = []
 itemsWeightList = []
 itemsProfitList = []
 itemsOptimalSelection = []
 populationSayisi = 0
 id = 0
 repairedListInRepair = []
+mutatedChilds = []
+mutatedChildsProfit = []
+capacity = 0
 
-f = open("knapsack01_c.txt","r")
-capacityStr = f.read()
-capacity = int(capacityStr)
-f.close()
+def fileRead(dataSetNumber):
+    capacityFile = dataSetNumber + "knapsack01_c.txt"
+    profitFile = dataSetNumber + "knapsack01_p.txt"
+    weightFile = dataSetNumber + "knapsack01_w.txt"
+    selectionFile = dataSetNumber + "knapsack01_s.txt"
 
-f = open("knapsack01_p.txt","r")
-profit = f.read()
-itemsProfitList = [int(n) for n in profit.split()]
-print(itemsProfitList)
-f.close()
+    f = open(capacityFile,"r")
+    capacityStr = f.read()
+    capacityInFunc = int(capacityStr)
+    f.close()
 
-f = open("knapsack01_w.txt","r")
-weights = f.read()
-itemsWeightList = [int(n) for n in weights.split()]
-print(itemsWeightList)
-f.close()
+    f = open(profitFile,"r")
+    profit = f.read()
+    itemsProfitList = [int(n) for n in profit.split()]
+    print(itemsProfitList)
+    f.close()
 
-f = open("knapsack01_s.txt","r")
-content = f.readlines()
-for line in content:
-    for i in line:
-        if i.isdigit() == True:
-            itemsOptimalSelection.append(int(i))
-f.close()
+    f = open(weightFile,"r")
+    weights = f.read()
+    itemsWeightList = [int(n) for n in weights.split()]
+    print(itemsWeightList)
+    f.close()
+
+    f = open(selectionFile,"r")
+    content = f.readlines()
+    for line in content:
+        for i in line:
+            if i.isdigit() == True:
+                itemsOptimalSelection.append(int(i))
+    f.close()
+
+    return capacityInFunc, itemsProfitList, itemsWeightList, itemsOptimalSelection
     
 def tournamentSelection():
     lprofitList = [x for x in range(len(parentsProfit))]
@@ -63,7 +74,7 @@ def tournamentSelection():
 def adayCozumUret():
     liste = []
     binaryChoice = [0,1]
-    for i in range(0,7):
+    for i in range(len(itemsOptimalSelection)):
         liste.append(random.choice(binaryChoice))
     return liste
 
@@ -108,6 +119,7 @@ def fitness(adayListe):
 
 def repairFunc(repairList:list):
     while True:
+        print("************************************")
         repairedList=[]
         repaireddList=[]
         print("will repair",repairList)
@@ -139,6 +151,7 @@ def repairFunc(repairList:list):
             k+=1
         if weight_toplam <= capacity:
             repairedList = repairList.copy()
+            print("************************************")
             return repairedList
 
 def crossoverFunc():
@@ -160,7 +173,25 @@ def crossoverFunc():
         lparentList.remove(rand1)
         child.extend(parent1[:threshold])
         child.extend(parent2[threshold:])
+        crossoveredChilds.append(child)
         print(child)
+
+def mutation(ch):
+    for i in range(len(ch)):
+        k = random.uniform(0,1)
+        if k > 0.8:
+            if ch[i] == 1:
+                ch[i] = 0
+            else:
+                ch[i] = 1
+    return ch
+
+selectedFiles = input("Enter dataset number: ")
+fileReturns = fileRead(selectedFiles)
+capacity = fileReturns[0]
+itemsProfitList = fileReturns[1]
+itemsWeightList = fileReturns[2]
+itemsOptimalSelection = fileReturns[3]
 
 adayCozumSayisi = int(input("Aday çözüm sayısı giriniz: "))
 populationSayisi = adayCozumSayisi
@@ -169,4 +200,13 @@ cokluAdayCozum(adayCozumSayisi)
 profits = tournamentSelection()
 print(calculateProfit(itemsOptimalSelection), "maks",(max(profits) - calculateProfit(itemsOptimalSelection)))
 crossoverFunc()
+print("----------------------------------")
+for i in range(len(crossoveredChilds)):
+    mutatedChild = mutation(crossoveredChilds[i])
+    repairedMutatedChild = fitness(mutatedChild)
+    print(repairedMutatedChild[0],"profit:",repairedMutatedChild[1])
+    mutatedChilds.append(repairedMutatedChild[0])
+    mutatedChilds.append(repairedMutatedChild[1])
+
+
 
